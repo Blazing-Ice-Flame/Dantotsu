@@ -1,5 +1,6 @@
 package ani.dantotsu.profile
 
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -11,25 +12,44 @@ import ani.dantotsu.toast
 import com.github.aachartmodel.aainfographics.aachartcreator.AAOptions
 
 class SingleStatActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivitySingleStatBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ThemeManager(this).applyTheme()
         initActivity(this)
         binding = ActivitySingleStatBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val chartOptions = chartOptions
+
+        val chartOptions = intent.getParcelableExtra<AAOptions>(EXTRA_CHART_OPTIONS)
+
         if (chartOptions != null) {
-            chartOptions.chart?.backgroundColor = getThemeColor(android.R.attr.windowBackground)
-            binding.chartView.aa_drawChartWithChartOptions(chartOptions)
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            setupChart(chartOptions)
         } else {
-            toast("No chart data")
-            finish()
+            handleNoChartData()
         }
     }
 
+    private fun setupChart(chartOptions: AAOptions) {
+        chartOptions.chart?.backgroundColor = getThemeColor(android.R.attr.windowBackground)
+        binding.chartView.aa_drawChartWithChartOptions(chartOptions)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+    }
+
+    private fun handleNoChartData() {
+        toast("No chart data available")
+        finish()
+    }
+
     companion object {
-        var chartOptions: AAOptions? = null  // I cba to pass this through an intent
+        private const val EXTRA_CHART_OPTIONS = "extra_chart_options"
+
+        fun start(context: AppCompatActivity, chartOptions: AAOptions) {
+            val intent = Intent(context, SingleStatActivity::class.java).apply {
+                putExtra(EXTRA_CHART_OPTIONS, chartOptions)
+            }
+            context.startActivity(intent)
+        }
     }
 }
